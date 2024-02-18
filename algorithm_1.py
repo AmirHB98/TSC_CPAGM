@@ -212,11 +212,11 @@ def in_sample_MAE(clusters: dict,prototypes: dict, lags : int, mode : str = MODE
             y_predict = prototypes[key].predict(X)
         
         if mode == 'train':
-            y_act = y[:split_point-lag]
-            y_pred = y_predict[:split_point-lag]
+            y_act = y[:split_point-lags]
+            y_pred = y_predict[:split_point-lags]
         elif mode == 'test':
-            y_act = y[split_point-lag:]
-            y_pred = y_predict[split_point-lag:]
+            y_act = y[split_point-lags:]
+            y_pred = y_predict[split_point-lags:]
         else:
             raise "Not a proper mode"
         
@@ -241,15 +241,15 @@ def plot_cluster(clusters: dict,prototypes: dict, lags: int, num_plots: int = NU
             X,y = Xy_Split([series],lags)
             y_predict = prototypes[key].predict(X)
 
-            y_train = y[:split_point-lag]
-            y_test = y[split_point-lag:]
+            y_train = y[:split_point-lags]
+            y_test = y[split_point-lags:]
 
-            y_predict_train = y_predict[:split_point-lag]
-            y_predict_test = y_predict[split_point-lag:]
+            y_predict_train = y_predict[:split_point-lags]
+            y_predict_test = y_predict[split_point-lags:]
 
 
             if mode == 'train':
-                x_axis = x_axis[lag:split_point]
+                x_axis = x_axis[lags:split_point]
                 y_pred = y_predict_train
                 y_act = y_train
             elif mode == 'test':
@@ -283,15 +283,14 @@ def loc_to_glob(local_dict : dict, global_dict: dict):
 #TODO: GLobal Model and Local Model
 
 
-if __name__== '__main__':
+def algorithm1(lag : int = 4, num_clusters : int = NUM_CLUSTERS ):
     path = os.getcwd() +'\CPAGM\Data\Chinatown_TEST.arff'
     series_set, series_label = get_data(path) # retireve data from dataset
     path = os.getcwd() +'\CPAGM\Data\Chinatown_TRAIN.arff'
     series_set2, serises_label2 = get_data(path)
     series_set.extend(series_set2)
 
-    lag = 4
-    clusters = distribute_randomly(series_set)
+    clusters = distribute_randomly(series_set, num_clusters)
     Keys = list(clusters.keys())
     global_converge_rate = {key : [] for key in Keys}
     global_valid_MAE = {key: [] for key in Keys}
@@ -316,10 +315,13 @@ if __name__== '__main__':
         steps += 1
     
 
-    fig , ax = plt.subplots(len(Keys), sharex= True)
-    for i,key in enumerate(Keys):
-        ax[i].plot(global_converge_rate[key], label='Convergance Rate', linestyle='-', marker='o')
-        ax[i].set_ylabel('COnvergance Rate')
+    for key in Keys:
+       plt.plot(global_converge_rate[key], label=f'Convergance Rate in {key}', linestyle='-', marker='o')
+    
+    plt.xlabel('Training Steps')
+    plt.ylabel('Convergance Rate')
+    plt.title(' COnvergence of Each Cluster')
+    plt.legend()
 
     plt.show()
     
@@ -335,7 +337,7 @@ if __name__== '__main__':
     plot_cluster(new_clusters,prototypes,lag)
     plot_cluster(new_clusters,prototypes,lag, mode= 'test')
 
-
+algorithm1()
 
 # for l in range(2,17,2):
 
