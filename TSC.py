@@ -4,10 +4,10 @@ import os
 import matplotlib.pyplot as plt
 import random
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, adjusted_rand_score
 
 SPLIT_POINT = 19
-CONVERGE_LIMIT = 0.95
+CONVERGE_LIMIT = 0.99
 NUM_CLUSTERS = 2
 NUM_LAG = 4
 NUM_PLOTS = 2
@@ -52,7 +52,7 @@ def get_data(path: str):
     return series_set, series_label
 
 def distribute_randomly(series_set, num_clusters:int = NUM_CLUSTERS):
-    """_summary_
+    """ Distributes available time series to each cluster for initializing the algorithm
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def distribute_randomly(series_set, num_clusters:int = NUM_CLUSTERS):
     
     return clusters
 
-def create_sub_sets(clusters: dict, split_point : int = SPLIT_POINT):
+def create_sub_sets(clusters: dict, split_point : int = SPLIT_POINT, lag = NUM_LAG):
     """ Creates a train sets for each cluster
 
     Parameters
@@ -97,7 +97,7 @@ def create_sub_sets(clusters: dict, split_point : int = SPLIT_POINT):
     test_clusters = {}
     for key, cluster in clusters.items():
         train_clusters[key] = [series[:split_point] for series in cluster]
-        test_clusters[key] = [series[split_point+1:] for series in cluster]
+        test_clusters[key] = [series[split_point-lag:] for series in cluster]
     
     return train_clusters, test_clusters
 
@@ -160,6 +160,24 @@ def create_prototypes(clusters: dict, lags: int) -> dict:
 
 
 def reassign_clusters(prototypes : dict, series_set: list, lags: int, split_point: int = SPLIT_POINT) -> dict:
+    """ Reassign clusters accorfing to minimum MAE from prototype
+
+    Parameters
+    ----------
+    prototypes : dict
+        The trained model for each cluster
+    series_set : list
+        all series in the problem
+    lags : int
+        Lag features for training model and testing model
+    split_point : int, optional
+        Number of elements in training series, by default SPLIT_POINT
+
+    Returns
+    -------
+    dict
+        _description_
+    """
 
     clusters = {key : [] for key in list(prototypes.keys())}
 
@@ -182,6 +200,22 @@ def reassign_clusters(prototypes : dict, series_set: list, lags: int, split_poin
     return clusters
 
 def converge_clusters(old_clusters: dict, new_clusters:dict, converge_limit: float = CONVERGE_LIMIT):
+    """_summary_
+
+    Parameters
+    ----------
+    old_clusters : dict
+        _description_
+    new_clusters : dict
+        _description_
+    converge_limit : float, optional
+        _description_, by default CONVERGE_LIMIT
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     converge_rate_dict = {key : 0.0 for key in list(old_clusters.keys())}
     for key in old_clusters.keys():
         if key in new_clusters: # keys should co-exist in input dictionaries, this is just in case ...
@@ -202,29 +236,56 @@ def converge_clusters(old_clusters: dict, new_clusters:dict, converge_limit: flo
     else:
         return converge_rate_dict,False
 
-def in_sample_MAE(clusters: dict,prototypes: dict, lags : int, mode : str = MODE, split_point : int = SPLIT_POINT):
-    
+def in_sample_MAE(clusters: dict,prototypes: dict, lags : int):
+    """_summary_
+
+    Parameters
+    ----------
+    clusters : dict
+        _description_
+    prototypes : dict
+        _description_
+    lags : int
+        _description_
+    mode : str, optional
+        _description_, by default MODE
+    split_point : int, optional
+        _description_, by default SPLIT_POINT
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     valid_error = {}
     
     for key ,cluster in clusters.items():
         if key in list(prototypes.keys()):
-            X,y = Xy_Split(cluster,lags)
-            y_predict = prototypes[key].predict(X)
-        
-        if mode == 'train':
-            y_act = y[:split_point-lags]
-            y_pred = y_predict[:split_point-lags]
-        elif mode == 'test':
-            y_act = y[split_point-lags:]
-            y_pred = y_predict[split_point-lags:]
-        else:
-            raise "Not a proper mode"
+            X,y_act = Xy_Split(cluster,lags)
+            y_pred = prototypes[key].predict(X)
         
         valid_error[key] = round(mean_absolute_error(y_act,y_pred),ndigits=3)
 
     return valid_error
 
 def plot_cluster(clusters: dict,prototypes: dict, lags: int, num_plots: int = NUM_PLOTS, mode : str = MODE, split_point : int = SPLIT_POINT):
+    """_summary_
+
+    Parameters
+    ----------
+    clusters : dict
+        _description_
+    prototypes : dict
+        _description_
+    lags : int
+        _description_
+    num_plots : int, optional
+        _description_, by default NUM_PLOTS
+    mode : str, optional
+        _description_, by default MODE
+    split_point : int, optional
+        _description_, by default SPLIT_POINT
+    """
 
     #TODO: add column name
 
@@ -259,7 +320,7 @@ def plot_cluster(clusters: dict,prototypes: dict, lags: int, num_plots: int = NU
             else:
                 assert "Not a proper mode"
             ax[n,i].plot(x_axis,y_act, label='Real series', linestyle='-', marker='o')
-            ax[n,i].plot(x_axis,y_pred, label='Prediction results', linestyle='-')
+            ax[n,i].plot(x_axis,y_pred, label='Prediction results', linestyle='dashed', marker='*')
             ax[n,i].set_xlabel('Hour (h)')
             ax[n,i].set_ylabel('Number of Pedestrians')
             ax[n,i].legend()
@@ -267,8 +328,38 @@ def plot_cluster(clusters: dict,prototypes: dict, lags: int, num_plots: int = NU
     plt.show()
 
 def loc_to_glob(local_dict : dict, global_dict: dict):
+    """Assigna values from local dictionary (inside a loop) to global dictionary
+
+    Parameters
+    ----------
+    local_dict : dict
+        Dictionary inside a loop
+    global_dict : dict
+        Global dictionary
+    """
     for key in list(global_dict.keys()):
         global_dict[key].append(local_dict[key])
+
+def summon_all_series():
+    """Chinatown dataset is made of 363 series, 20 in TRAIN set and 343 in TEST set, this function combines all.
+
+    Returns
+    -------
+    series_set: list
+        List of numpy arrays whcich are a series each
+    series_label : list
+        List of integers indicating calss of the series (1-Weekend 2-Weekday)
+    """
+
+    path = os.getcwd() +'\CPAGM\Data\Chinatown_TEST.arff'
+    series_set, series_label = get_data(path) # retireve data from dataset
+    path = os.getcwd() +'\CPAGM\Data\Chinatown_TRAIN.arff'
+    series_set_2, serises_label_2 = get_data(path)
+    series_set.extend(series_set_2)
+    series_label.extend(serises_label_2)
+
+    return series_set, series_label
+
 
 
 
@@ -279,16 +370,18 @@ def loc_to_glob(local_dict : dict, global_dict: dict):
 #TODO: Algorithm2 
     
 #TODO: README with some plots
-        
-#TODO: GLobal Model and Local Model
 
 
-def algorithm1(lag : int = 4, num_clusters : int = NUM_CLUSTERS ):
-    path = os.getcwd() +'\CPAGM\Data\Chinatown_TEST.arff'
-    series_set, series_label = get_data(path) # retireve data from dataset
-    path = os.getcwd() +'\CPAGM\Data\Chinatown_TRAIN.arff'
-    series_set2, serises_label2 = get_data(path)
-    series_set.extend(series_set2)
+def main_algorithm(series_set : list, lag : int = NUM_LAG, num_clusters : int = NUM_CLUSTERS, ARI : bool = True, split_point : int = SPLIT_POINT ):
+    """_summary_
+
+    Parameters
+    ----------
+    lag : int, optional
+        _description_, by default 4
+    num_clusters : int, optional
+        _description_, by default NUM_CLUSTERS
+    """
 
     clusters = distribute_randomly(series_set, num_clusters)
     Keys = list(clusters.keys())
@@ -301,19 +394,32 @@ def algorithm1(lag : int = 4, num_clusters : int = NUM_CLUSTERS ):
 
     while not done:
 
-        train_clusters,test_clusters = create_sub_sets(clusters)
+        train_clusters,test_clusters = create_sub_sets(clusters,split_point,lag)
         prototypes = create_prototypes(train_clusters, lag)
-        new_clusters = reassign_clusters(prototypes,series_set,lag)
-        valid_MAE = in_sample_MAE(new_clusters,prototypes,lag)
-        test_MAE = in_sample_MAE(new_clusters,prototypes, lag, mode = 'test')
+        valid_MAE = in_sample_MAE(train_clusters,prototypes,lag)
+        test_MAE = in_sample_MAE(test_clusters,prototypes,lag)
         loc_to_glob(valid_MAE,global_valid_MAE)
         loc_to_glob(test_MAE, global_test_MAE)
-        print(f'Training step {steps}: In-sample MAE {valid_MAE} , out-sample test MAE {test_MAE}')
+        print(f'Training step {steps}: \nIn-sample MAE {valid_MAE} \nout-sample test MAE {test_MAE}')
+        new_clusters = reassign_clusters(prototypes,series_set,lag)
         converage_rate_step,done = converge_clusters(clusters,new_clusters)
         loc_to_glob(converage_rate_step,global_converge_rate)
         clusters = new_clusters
         steps += 1
     
+    if ARI:
+        cluster_label = np.zeros(len(series_set))
+
+        for i,serie in enumerate(series_set):
+            for key,series in clusters.items():
+                if np.any([np.array_equal(x,serie) for x in series]):
+                    cluster_label[i] = int(key[-1])
+                    
+                
+        cluster_label = list(cluster_label)
+    
+
+
 
     for key in Keys:
        plt.plot(global_converge_rate[key], label=f'Convergance Rate in {key}', linestyle='-', marker='o')
@@ -334,13 +440,111 @@ def algorithm1(lag : int = 4, num_clusters : int = NUM_CLUSTERS ):
         
     plt.show()
 
-    plot_cluster(new_clusters,prototypes,lag)
-    plot_cluster(new_clusters,prototypes,lag, mode= 'test')
+    plot_cluster(clusters,prototypes,lag)
+    plot_cluster(clusters,prototypes,lag, mode= 'test')
 
-algorithm1()
+    if ARI:
+        return cluster_label
+    
 
-# for l in range(2,17,2):
+def global_model(series_set:list, lag: int = NUM_LAG, split_point :int = SPLIT_POINT):
+    """An autoregressive model to predict all fo the series
 
-# test set : the last 5 observations of each dataset (h = 5)
-# training period: the forst 19 observations of each series
-# validation period: observation from l+1 to 19 
+    Parameters
+    ----------
+    lag : int, optional
+        Lag features for training the model, by default NUM_LAG
+    split_point : int, optional
+        Number of elements assigned to train and test for each series, by default SPLIT_POINT
+    """
+
+    train_set = [array[:split_point] for array in series_set]
+    test_set = [array[split_point-lag:] for array in series_set]
+    h = 24 - split_point
+
+    model = LinearRegression()
+
+    X,y = Xy_Split(train_set ,lag)
+    model.fit(X,y)
+    y_pred = model.predict(X)
+
+    valid_MAE = mean_absolute_error(y,y_pred)
+    print(f'Global model - Validation MAE: {valid_MAE :.2f}')
+
+    num_plots = 3
+    fig , ax = plt.subplots(num_plots,sharex=True)
+    fig.suptitle('In-sample prediction for validation set')
+    for i in range(num_plots):
+        ax[i].plot(y[(split_point-lag)*i:(split_point-lag)*(i+1)], marker = 'o', label = 'Actual')
+        ax[i].plot(y_pred[(split_point-lag)*i:(split_point-lag)*(i+1)], marker = 'o', label = 'Preddiction', linestyle= '--')
+        ax[i].legend()
+    plt.show()
+    
+
+    X,y = Xy_Split(test_set,lag)
+    y_pred = model.predict(X)
+    test_MAE = mean_absolute_error(y,y_pred)
+    print(f'Global model -Test MAE : {test_MAE}')
+
+    fig , ax = plt.subplots(num_plots,sharex=True)
+    fig.suptitle('Out-sample prediction for test set')
+    for i in range(num_plots):
+        ax[i].plot(y[h*i:h*(i+1)], marker = 'o', label = 'Actual')
+        ax[i].plot(y_pred[h*i:h*(i+1)], marker = 'o', label = 'Preddiction', linestyle= '--')
+        ax[i].legend()
+    plt.show()
+
+def local_model(series_set: list, split_point : int = SPLIT_POINT, lag: int = NUM_LAG):
+    """_summary_
+
+    Parameters
+    ----------
+    split_point : int, optional
+        _description_, by default SPLIT_POINT
+    lag : int, optional
+        _description_, by default NUM_LAG
+    """
+
+    valid_MAE =[]
+    test_MAE = []
+
+    for series in series_set:
+
+        train_series = series[:split_point] 
+        test_series = series[split_point-lag:]
+
+        X,y = Xy_Split([train_series],lag)
+
+        model = LinearRegression()
+        model.fit(X,y)
+        y_pred = model.predict(X)
+
+        valid_MAE.append(mean_absolute_error(y,y_pred))
+
+        X,y = Xy_Split([test_series],lag)
+
+        y_pred = model.predict(X)
+
+        test_MAE.append(mean_absolute_error(y,y_pred))
+    
+    mean_valid_MAE = np.mean(valid_MAE)
+    mean_test_MAE = np.mean(test_MAE)
+
+    print(f'Local model -Validation MAE :{mean_valid_MAE}')
+    print(f'Local model - Test MAE {mean_test_MAE}')
+
+
+
+
+if __name__ == '__main__':
+
+    series_set, series_label = summon_all_series()
+    local_model(series_set)
+    global_model(series_set)
+
+    new_label = main_algorithm(series_set,9)
+
+    # ari_4 = adjusted_rand_score(series_label,new_label)
+    # print(ari_4)
+    # for l in range(2,17,2):
+ 
