@@ -1,7 +1,5 @@
 # ignore all .log files
 
-invisible.py
-.gitignore
 
 #ignore all files in the log/ directory
 

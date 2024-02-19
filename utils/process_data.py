@@ -89,3 +89,28 @@ def Xy_Split(series_set: list, lags : int):
 
     return X,y
  
+def create_sub_sets(clusters: dict, split_point : int , lag :int ):
+    """ Creates a train sets for each cluster
+
+    Parameters
+    ----------
+    clusters : dict
+        Clusters that should be used to extract prototypes
+    split_point : int, optional
+        Number of bservations in each series required for training, by default 19
+
+    Returns
+    -------
+    train_cluster: dict
+        A dictionary similar to input with limited observations
+    test_cluster: dict
+        A dictionary similar to input but containing only h final observations
+    """
+
+    train_clusters = {}
+    test_clusters = {}
+    for key, cluster in clusters.items():
+        train_clusters[key] = [series[:split_point] for series in cluster]
+        test_clusters[key] = [series[split_point-lag:] for series in cluster]
+    
+    return train_clusters, test_clusters
