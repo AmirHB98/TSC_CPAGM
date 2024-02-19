@@ -1,8 +1,8 @@
 # ignore all .log files
 
 invisible.py
+.gitignore
 
 #ignore all files in the log/ directory
 
-__pyache__/
-.vevn/
+__pycache__/
