@@ -44,7 +44,8 @@ if __name__ == '__main__':
         report_valid[model_keys[1]].append(valid_mae)
         report_test[model_keys[1]].append(test_mae)
 
-        valid_mae, test_mae, new_label = main_algorithm(series_set,lag,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT,sample_plot=plot_samples, train_plot=plot_samples,ARI= True) #CPAGM
+        valid_mae, test_mae, new_label = main_algorithm(series_set,lag,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT,\
+                                                        sample_plot=plot_samples, train_plot=plot_samples,ARI= True) #CPAGM
         report_valid[model_keys[2]].append(valid_mae)
         report_test[model_keys[2]].append(test_mae)
 
