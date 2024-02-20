@@ -20,18 +20,16 @@ NUM_PLOTS = 2
 
 #TODO: print errors for all algorithms together at the end + bar chart
 
-#TODO: print convergence rate for test set.
-
 if __name__ == '__main__':
 
     series_set, series_label = summon_all_series()
     local_model(series_set,SPLIT_POINT,NUM_LAG) #LM
-    global_model(series_set, NUM_LAG, SPLIT_POINT)
+    global_model(series_set, NUM_LAG, SPLIT_POINT) #GM
 
-    new_label = main_algorithm(series_set,lag=10)
+    new_label = main_algorithm(series_set,NUM_LAG,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT) #CPAGM
 
-    ari_4 = adjusted_rand_score(series_label,new_label)
-    print(ari_4)
+    # ari_4 = adjusted_rand_score(series_label,new_label)
+    # print(ari_4)
 
     # for l in range(2,17,2):
  

@@ -114,10 +114,33 @@ def loc_to_glob(local_dict : dict, global_dict: dict):
         global_dict[key].append(local_dict[key])
 
 def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point : int, converge_limit : float,\
-                    ARI : bool = False , train_plot : bool = True, sample_plot : bool = True, num_plots :int = 2 ):
-    
+                    ARI : bool = False , train_plot : bool = True, sample_plot : bool = False, num_plots :int = 2 ):
+    """_summary_
 
+    Parameters
+    ----------
+    series_set : list
+        List of all series in chinatown dataset
+    lag : int
+        lag feature for training the models
+    num_clusters : int
+        Number of desired clusters
+    split_point : int
+        Number of arrays in training set (the rest will be moved to test set)
+    converge_limit : float
+        Threshold that accepts clustering
+    train_plot : bool, optional
+        Plot training properties per step, by default True
+    sample_plot : bool, optional
+        Sampling from each cluster and plot validation set and training set against its prediction , by default False
+    num_plots : int, optional
+        How many samples to plot?, by default 2
 
+    Returns
+    -------
+    _type_
+        _description_
+    """
     clusters = distribute_randomly(series_set, num_clusters)
     Keys = list(clusters.keys())
     global_converge_rate = {key : [] for key in Keys}
