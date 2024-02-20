@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     for lag in lags:
 
-        plot_samples = True if lag in plot_lags else False
+        plot_samples = False if lag in plot_lags else False
 
         print (f'Lag Features: {lag}')
         valid_mae, test_mae = local_model(series_set,SPLIT_POINT,lag,sample_plot=plot_samples) #LM
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     for lag,num_clusters in product(lags,all_custers):
         print(f'Lag Features: {lag}, Number of clusters: {num_clusters}')
         a = num_clusters-3
-        valid_mae,test_mae = main_algorithm(series_set,lag,num_clusters,SPLIT_POINT,CONVERGE_LIMIT)
+        valid_mae,test_mae = main_algorithm(series_set,lag,num_clusters,SPLIT_POINT,converge_limit=.82)
         report_valid[cluster_keys[a]].append(valid_mae)
         report_test[cluster_keys[a]].append(test_mae)
         print('')

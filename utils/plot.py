@@ -13,7 +13,6 @@ def plot_cluster(train_clusters: dict, test_clusters: dict, prototypes: dict, la
         ax[0,1].set_title('Test Samples')
         ax[num_plots-1,0].set_xlabel('Hour (h)')
         ax[num_plots-1,1].set_xlabel('Hour (h)')
-        print(f'Ax type: {type(ax)}')
 
         model = prototypes[key]
         train_list = train_clusters[key]
