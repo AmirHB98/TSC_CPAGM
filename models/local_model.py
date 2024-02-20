@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
-def local_model(series_set: list, split_point : int, lag: int, num_plots : int =2):
+def local_model(series_set: list, split_point : int, lag: int, num_plots : int =2, sample_plot : bool = False):
     """_summary_
 
     Parameters
@@ -23,8 +23,10 @@ def local_model(series_set: list, split_point : int, lag: int, num_plots : int =
     valid_MAE =[]
     test_MAE = []
     to_plot = [random.randint(0,len(series_set)-1) for _ in range(num_plots)]
-    fig, ax = plt.subplots(num_plots, sharex= True)
-    fig.suptitle('Sample visualizations using Local Model (LM)')
+    fig, ax = plt.subplots(num_plots,2, sharey= 'row')
+    fig.suptitle('Sampled Prediction Using Local Model (LM)')
+    ax[0,0].set_title('Validation Samples')
+    ax[0,1].set_title('Test Samples')
     a = 0
 
     for i,series in enumerate(series_set):
@@ -32,29 +34,37 @@ def local_model(series_set: list, split_point : int, lag: int, num_plots : int =
         train_series = series[:split_point] 
         test_series = series[split_point-lag:]
 
-        X,y = Xy_Split([train_series],lag)
+        X,y_train = Xy_Split([train_series],lag)
 
         model = LinearRegression()
-        model.fit(X,y)
+        model.fit(X,y_train)
         y_pred_train = model.predict(X)
 
-        valid_MAE.append(mean_absolute_error(y,y_pred_train))
+        valid_MAE.append(mean_absolute_error(y_train,y_pred_train))
 
-        X,y = Xy_Split([test_series],lag)
+        X,y_test = Xy_Split([test_series],lag)
         y_pred_test = model.predict(X)
 
-        test_MAE.append(mean_absolute_error(y,y_pred_test))
+        test_MAE.append(mean_absolute_error(y_test,y_pred_test))
 
-        if i in to_plot:
-            y_pred = np.concatenate([y_pred_train,y_pred_test],axis=0)
-            ax[a].plot(series, marker ='o', label = 'Actual series')
-            ax[a].plot(range(lag,len(series)), y_pred, marker = 'o', label = 'Predicted series')
-            ax[a].set_ylabel('Number of Pedestrians')
-            if a == num_plots-1:
-                ax[a].set_xlabel('Hour (h)')
-            a += 1
+        if sample_plot:
+            if i in to_plot:
+
+                x_axis = range(lag,split_point)
+                ax[a,0].plot(x_axis,y_train, marker ='o', label = 'Actual series')
+                ax[a,0].plot(x_axis,y_pred_train , marker = 'o', label = 'Predicted series', linestyle = '--')
+                ax[a,0].set_ylabel('Number of Pedestrians')
+
+                x_axis = range(split_point,len(series))
+                ax[a,1].plot(x_axis,y_test, marker ='o', label = 'Actual series')
+                ax[a,1].plot(x_axis,y_pred_test , marker = 'o', label = 'Predicted series', linestyle = '--')
+
+                if a == num_plots-1:
+                    ax[a,0].set_xlabel('Hour (h)')
+                    ax[a,1].set_xlabel('Hour (h)')
+                    plt.show()
+                a += 1
             
-    plt.show()
 
     
     mean_valid_MAE = np.mean(valid_MAE)
