@@ -33,13 +33,13 @@ def global_model(series_set:list, lag: int , split_point :int , sample_plot : bo
     model.fit(X,y)
     y_pred = model.predict(X)
 
-    valid_MAE = mean_absolute_error(y,y_pred)
-    print(f'Global model - Validation MAE: {valid_MAE :.2f}')
+    valid_MAE = round(mean_absolute_error(y,y_pred),1)
+    print(f'Global model - Validation MAE: {valid_MAE}')
 
     X,y = Xy_Split(test_set,lag)
     y_pred = model.predict(X)
 
-    test_MAE = mean_absolute_error(y,y_pred)
+    test_MAE = round(mean_absolute_error(y,y_pred),1)
     print(f'Global model - Test MAE : {test_MAE}')
 
     if sample_plot:
@@ -51,4 +51,6 @@ def global_model(series_set:list, lag: int , split_point :int , sample_plot : bo
         ax[num_plots-1,1].set_xlabel('Hour (h)')
 
         plot_samples(ax,lag, split_point, train_set, test_set, model)
+    
+    return valid_MAE, test_MAE
         

@@ -93,8 +93,9 @@ def reassign_clusters(prototypes : dict, series_set: list, lags: int, split_poin
         Errors = {}
 
         for key, model in prototypes.items():
-            y_predict = model.predict(X)
-            Errors[key] = mean_absolute_error(y, y_predict)
+            if model:
+                y_predict = model.predict(X)
+                Errors[key] = mean_absolute_error(y, y_predict)
         
         cluster_key = min(Errors, key=Errors.get)
 
@@ -116,7 +117,7 @@ def loc_to_glob(local_dict : dict, global_dict: dict):
         global_dict[key].append(local_dict[key])
 
 def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point : int, converge_limit : float,\
-                    ARI : bool = False , train_plot : bool = True, sample_plot : bool = False, num_plots :int = 2 ):
+                    ARI : bool = False , train_plot : bool = False, sample_plot : bool = False, num_plots :int = 2 ):
     """_summary_
 
     Parameters
@@ -168,8 +169,8 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
         steps += 1
     
     
-    model_valid_MAE = statistics.mean(valid_MAE.values())
-    model_test_MAE = statistics.mean(test_MAE.values())
+    model_valid_MAE = round(statistics.mean(valid_MAE.values()),1)
+    model_test_MAE = round(statistics.mean(test_MAE.values()),1)
 
     print(f'CPAGM model - Validation MAE: {model_valid_MAE}\nCPAGM model - test MAE: {model_test_MAE}')
     if sample_plot:
@@ -195,7 +196,7 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
     
         plt.xlabel('Training Steps')
         plt.ylabel('Convergance Rate')
-        plt.title(' Convergence of Each Cluster')
+        plt.title(f'Convergence of Each Cluster with {lag}-Lag Features')
         plt.legend()
 
         plt.show()
@@ -212,4 +213,6 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
         plt.show()
 
     if ARI:
-        return cluster_label
+        return model_valid_MAE,model_test_MAE,cluster_label
+    else:
+        return model_valid_MAE, model_test_MAE

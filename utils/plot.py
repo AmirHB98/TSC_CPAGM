@@ -11,6 +11,8 @@ def plot_cluster(train_clusters: dict, test_clusters: dict, prototypes: dict, la
         fig.suptitle(f'Random Members of {key} Along Their {lag}-Lagged Prediction')
         ax[0,0].set_title('Validation Samples')
         ax[0,1].set_title('Test Samples')
+        ax[num_plots-1,0].set_xlabel('Hour (h)')
+        ax[num_plots-1,1].set_xlabel('Hour (h)')
         print(f'Ax type: {type(ax)}')
 
         model = prototypes[key]

@@ -27,7 +27,8 @@ def converge_clusters(old_clusters: dict, new_clusters:dict, converge_limit: flo
             old_set = set(tuple(array) for array in old_clusters[key])
             new_set = set(tuple(array) for array in new_clusters[key])
 
-            converge_rate = len(old_set.intersection(new_set))/len(new_set)
+            if new_set:
+                converge_rate = len(old_set.intersection(new_set))/len(new_set)
             # print(f'{key} converge rate: {converge_rate:.3f}, len_old: {len(old_set)}, len_new: {len(new_set)}')
             
         else:
@@ -61,7 +62,7 @@ def in_cluster_MAE(clusters: dict,prototypes: dict, lags : int):
     valid_error = {}
     
     for key ,cluster in clusters.items():
-        if key in list(prototypes.keys()):
+        if key in list(prototypes.keys()) and cluster:
             X,y_act = Xy_Split(cluster,lags)
             y_pred = prototypes[key].predict(X)
         

@@ -44,11 +44,13 @@ def local_model(series_set: list, split_point : int, lag: int,sample_plot : bool
         y_pred_train = model.predict(X)
 
         valid_MAE.append(mean_absolute_error(y_train,y_pred_train))
+        model_valid_MAE = round(np.mean(valid_MAE),1)
 
         X,y_test = Xy_Split([test_series],lag)
         y_pred_test = model.predict(X)
 
         test_MAE.append(mean_absolute_error(y_test,y_pred_test))
+        model_test_MAE = round(np.mean(test_MAE),1)
 
         if sample_plot:
             if i in to_plot:
@@ -67,11 +69,8 @@ def local_model(series_set: list, split_point : int, lag: int,sample_plot : bool
                     ax[a,1].set_xlabel('Hour (h)')
                     plt.show()
                 a += 1
-            
 
-    
-    mean_valid_MAE = np.mean(valid_MAE)
-    mean_test_MAE = np.mean(test_MAE)
+    print(f'Local model - Validation MAE :{model_valid_MAE: .2f}')
+    print(f'Local model - Test MAE {model_test_MAE: .2f}')
 
-    print(f'Local model - Validation MAE :{mean_valid_MAE: .2f}')
-    print(f'Local model - Test MAE {mean_test_MAE: .2f}')
+    return model_valid_MAE,model_test_MAE
