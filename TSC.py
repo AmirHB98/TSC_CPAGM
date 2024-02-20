@@ -13,12 +13,6 @@ CONVERGE_LIMIT = 0.8
 NUM_CLUSTERS = 2
 NUM_PLOTS = 2
 
-#TODO: yaml or json
-
-#TODO: Algorithm2 
-    
-#TODO: README with some plots
-
 if __name__ == '__main__':
     
     # Read train and test data from dataset 
