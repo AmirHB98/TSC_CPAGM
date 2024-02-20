@@ -204,10 +204,12 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
         fig , ax = plt.subplots(len(Keys), sharex= True)
         fig.suptitle('MAE Metric Per Training Steps')
         ax[len(Keys)-1].set_xlabel('Steps')
+        
         for i,key in enumerate(Keys):
             ax[i].plot(global_test_MAE[key], label='Test MAE', linestyle='-', marker='o')
             ax[i].plot(global_valid_MAE[key], label= 'Validation MAE',linestyle='-', marker='o' )
             ax[i].set_ylabel('MAE')
+            ax[i].set_title(key)
             ax[i].legend()
         
         plt.show()
