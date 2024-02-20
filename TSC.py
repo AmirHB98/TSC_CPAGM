@@ -9,7 +9,7 @@ from itertools import product
 import random
 
 SPLIT_POINT = 19
-CONVERGE_LIMIT = 0.8
+CONVERGE_LIMIT = 0.99
 NUM_CLUSTERS = 2
 NUM_PLOTS = 2
 
@@ -29,6 +29,7 @@ if __name__ == '__main__':
 
     plot_lags = [4,8,10,16]
     plot_samples = False
+    ari = []
 
     for lag in lags:
 
@@ -43,14 +44,23 @@ if __name__ == '__main__':
         report_valid[model_keys[1]].append(valid_mae)
         report_test[model_keys[1]].append(test_mae)
 
-        valid_mae, test_mae = main_algorithm(series_set,lag,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT,sample_plot=plot_samples, train_plot=plot_samples) #CPAGM
+        valid_mae, test_mae, new_label = main_algorithm(series_set,lag,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT,sample_plot=plot_samples, train_plot=plot_samples,ARI= True) #CPAGM
         report_valid[model_keys[2]].append(valid_mae)
         report_test[model_keys[2]].append(test_mae)
 
+        ari.append(adjusted_rand_score(series_label,new_label))
+
+
         print('')
     
+    # plot ARI for each lag
+    plt.plot(lags,ari, marker = 'o', color = 'g')
+    plt.ylabel('ARI')
+    plt.xlabel('Lag  Features')
+    plt.title('Measure Similarity of CLusters to Real Labels')
+    plt.show()
+
     # Bar plot for comparison of models
-    
     x = np.arange(len(lags_str))  # the label locations
     width = 0.25  # the width of the bars
     multiplier = 0
