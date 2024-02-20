@@ -5,17 +5,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 
-def local_model(series_set: list, split_point : int, lag: int, num_plots : int =2, sample_plot : bool = False):
-    """_summary_
+def local_model(series_set: list, split_point : int, lag: int,sample_plot : bool = False, num_plots : int =2):
+    """For each series, fits a uniqe model according to the train_set. That is 363 models trained during this process
 
     Parameters
     ----------
     series_set : list
-        _description_
+        List which contains all of the series in chinatown dataset
     split_point : int
-        _description_
+        Where trains_set and test set are divided
     lag : int
-        _description_
+        Lag features for training models
+    sample_plot: bool
+        If you want to plot some series along with their predictions randomly set it to True
     num_plots : int, optional
         Sample visualizations to be plotted while training the model, by default 2
     """
