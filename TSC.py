@@ -7,7 +7,6 @@ from models.model_1 import main_algorithm
 SPLIT_POINT = 19
 CONVERGE_LIMIT = 0.99
 NUM_CLUSTERS = 2
-NUM_LAG = 4
 NUM_PLOTS = 2
 
 #TODO: yaml or json
@@ -18,18 +17,20 @@ NUM_PLOTS = 2
         
 #TODO: plots Fig2, Fig5, Fig6
 
-#TODO: print errors for all algorithms together at the end + bar chart
+#TODO:  errors for all algorithms bar chart
 
 if __name__ == '__main__':
-
+    
     series_set, series_label = summon_all_series()
-    local_model(series_set,SPLIT_POINT,NUM_LAG) #LM
-    global_model(series_set, NUM_LAG, SPLIT_POINT) #GM
-
-    new_label = main_algorithm(series_set,NUM_LAG,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT) #CPAGM
+    for lag in range(2,17,2):
+        print (f'Lag Features: {lag}')
+        local_model(series_set,SPLIT_POINT,lag) #LM
+        global_model(series_set, lag, SPLIT_POINT) #GM
+        main_algorithm(series_set,lag,NUM_CLUSTERS,SPLIT_POINT,CONVERGE_LIMIT) #CPAGM
+        print('')
 
     # ari_4 = adjusted_rand_score(series_label,new_label)
     # print(ari_4)
 
-    # for l in range(2,17,2):
+
  
