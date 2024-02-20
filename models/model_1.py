@@ -7,6 +7,8 @@ from utils.process_data import create_sub_sets
 from utils.plot import plot_cluster
 import numpy as np
 import matplotlib.pyplot as plt
+import statistics
+
 
 def distribute_randomly(series_set, num_clusters:int):
     """ Distributes available time series to each cluster for initializing the algorithm
@@ -158,13 +160,18 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
         test_MAE = in_cluster_MAE(test_clusters,prototypes,lag)
         loc_to_glob(valid_MAE,global_valid_MAE)
         loc_to_glob(test_MAE, global_test_MAE)
-        print(f'Training step {steps}: \nIn-sample MAE {valid_MAE} \nout-sample test MAE {test_MAE}')
+        # print(f'Training step {steps}: \nIn-sample MAE {valid_MAE} \nout-sample test MAE {test_MAE}')
         new_clusters = reassign_clusters(prototypes,series_set,lag,split_point)
         converage_rate_step,done = converge_clusters(clusters,new_clusters,converge_limit)
         loc_to_glob(converage_rate_step,global_converge_rate)
         clusters = new_clusters
         steps += 1
     
+    
+    model_valid_MAE = statistics.mean(valid_MAE.values())
+    model_test_MAE = statistics.mean(test_MAE.values())
+
+    print(f'CPAGM model - Validation MAE: {model_valid_MAE}\nCPAGM model - test MAE: {model_test_MAE}')
     if sample_plot:
         plot_cluster(train_clusters,test_clusters,prototypes,lag,split_point)
     

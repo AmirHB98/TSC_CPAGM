@@ -73,5 +73,5 @@ def local_model(series_set: list, split_point : int, lag: int,sample_plot : bool
     mean_valid_MAE = np.mean(valid_MAE)
     mean_test_MAE = np.mean(test_MAE)
 
-    print(f'Local model -Validation MAE :{mean_valid_MAE: .2f}')
+    print(f'Local model - Validation MAE :{mean_valid_MAE: .2f}')
     print(f'Local model - Test MAE {mean_test_MAE: .2f}')

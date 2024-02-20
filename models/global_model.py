@@ -40,7 +40,7 @@ def global_model(series_set:list, lag: int , split_point :int , sample_plot : bo
     y_pred = model.predict(X)
 
     test_MAE = mean_absolute_error(y,y_pred)
-    print(f'Global model -Test MAE : {test_MAE}')
+    print(f'Global model - Test MAE : {test_MAE}')
 
     if sample_plot:
         fig , ax = plt.subplots(num_plots,2,sharey='row')

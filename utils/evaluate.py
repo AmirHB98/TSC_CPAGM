@@ -28,13 +28,13 @@ def converge_clusters(old_clusters: dict, new_clusters:dict, converge_limit: flo
             new_set = set(tuple(array) for array in new_clusters[key])
 
             converge_rate = len(old_set.intersection(new_set))/len(new_set)
-            print(f'{key} converge rate: {converge_rate:.3f}, len_old: {len(old_set)}, len_new: {len(new_set)}')
+            # print(f'{key} converge rate: {converge_rate:.3f}, len_old: {len(old_set)}, len_new: {len(new_set)}')
             
         else:
             return converge_rate_dict, False
         
         converge_rate_dict[key] = converge_rate
-    print('\n')
+    # print('')
     if min(converge_rate_dict.values()) > converge_limit:
         return converge_rate_dict,True
     else:
