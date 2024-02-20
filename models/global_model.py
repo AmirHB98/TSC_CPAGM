@@ -2,10 +2,11 @@
 from sklearn.linear_model import LinearRegression
 from utils.process_data import Xy_Split
 from sklearn.metrics import mean_absolute_error
+from utils.plot import plot_samples
 import random
 import matplotlib.pyplot as plt
 
-def global_model(series_set:list, lag: int , split_point :int , num_plots : int = 2, sample_plot : bool = False ):
+def global_model(series_set:list, lag: int , split_point :int , sample_plot : bool = False, num_plots : int = 2 ):
     """An autoregressive model to predict all fo the series
 
     Parameters
@@ -43,31 +44,11 @@ def global_model(series_set:list, lag: int , split_point :int , num_plots : int 
 
     if sample_plot:
         fig , ax = plt.subplots(num_plots,2,sharey='row')
-        fig.suptitle('Sampled Prediction Using Global Model (GM)')
+        fig.suptitle(f'Sampled Prediction Using Global Model (GM) for {lag} lags')
         ax[0,0].set_title('Validation Samples')
         ax[0,1].set_title('Test Samples')
+        ax[num_plots-1,0].set_xlabel('Hour (h)')
+        ax[num_plots-1,1].set_xlabel('Hour (h)')
 
-        for i in range(num_plots):
-
-            j = random.randint(0,len(series_set)-1)
-            plot_train_set = train_set[j]
-            plot_test_set = test_set[j]
-
-            X,y = Xy_Split([plot_train_set],lag)
-            y_pred = model.predict(X)
-            
-            x_axis = range(lag,split_point)
-            ax[i,0].plot(x_axis,y, marker = 'o', label = 'Actual')
-            ax[i,0].plot(x_axis,y_pred, marker = 'o', label = 'Preddiction', linestyle= '--')
-            ax[i,0].set_ylabel('Number of Pedestrians')
-            ax[i,0].legend()
-
-            X,y = Xy_Split([plot_test_set],lag)
-            y_pred = model.predict(X)
-
-            x_axis = range(split_point,24)
-            ax[i,1].plot(y, marker = 'o', label = 'Actual')
-            ax[i,1].plot(y_pred, marker = 'o', label = 'Preddiction', linestyle= '--')
-            ax[i,1].legend()
-
-        plt.show()
+        plot_samples(ax,lag, split_point, train_set, test_set, model)
+        

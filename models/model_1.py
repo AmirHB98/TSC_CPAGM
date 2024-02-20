@@ -4,7 +4,9 @@ from utils.process_data import Xy_Split
 from sklearn.metrics import mean_absolute_error
 from utils.evaluate import in_cluster_MAE, converge_clusters
 from utils.process_data import create_sub_sets
+from utils.plot import plot_cluster
 import numpy as np
+import matplotlib.pyplot as plt
 
 def distribute_randomly(series_set, num_clusters:int):
     """ Distributes available time series to each cluster for initializing the algorithm
@@ -111,7 +113,8 @@ def loc_to_glob(local_dict : dict, global_dict: dict):
     for key in list(global_dict.keys()):
         global_dict[key].append(local_dict[key])
 
-def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point : int, ARI : bool = True ):
+def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point : int, converge_limit : float,\
+                    ARI : bool = False , train_plot : bool = True, sample_plot : bool = True, num_plots :int = 2 ):
     
 
 
@@ -133,11 +136,14 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
         loc_to_glob(valid_MAE,global_valid_MAE)
         loc_to_glob(test_MAE, global_test_MAE)
         print(f'Training step {steps}: \nIn-sample MAE {valid_MAE} \nout-sample test MAE {test_MAE}')
-        new_clusters = reassign_clusters(prototypes,series_set,lag)
-        converage_rate_step,done = converge_clusters(clusters,new_clusters)
+        new_clusters = reassign_clusters(prototypes,series_set,lag,split_point)
+        converage_rate_step,done = converge_clusters(clusters,new_clusters,converge_limit)
         loc_to_glob(converage_rate_step,global_converge_rate)
         clusters = new_clusters
         steps += 1
+    
+    if sample_plot:
+        plot_cluster(train_clusters,test_clusters,prototypes,lag,split_point)
     
     if ARI:
         cluster_label = np.zeros(len(series_set))
@@ -153,28 +159,27 @@ def main_algorithm(series_set : list, lag : int, num_clusters : int, split_point
     # for key in Keys:
         
 
-
-    for key in Keys:
-       plt.plot(global_converge_rate[key], label=f'Convergance Rate in {key}', linestyle='-', marker='o')
+    if train_plot:
+        for key in Keys:
+            plt.plot(global_converge_rate[key], label=f'Convergance Rate in {key}', linestyle='-', marker='o')
     
-    plt.xlabel('Training Steps')
-    plt.ylabel('Convergance Rate')
-    plt.title(' Convergence of Each Cluster')
-    plt.legend()
+        plt.xlabel('Training Steps')
+        plt.ylabel('Convergance Rate')
+        plt.title(' Convergence of Each Cluster')
+        plt.legend()
 
-    plt.show()
+        plt.show()
     
-    fig , ax = plt.subplots(len(Keys), sharex= True)
-    for i,key in enumerate(Keys):
-        ax[i].plot(global_test_MAE[key], label='Test MAE', linestyle='-', marker='o')
-        ax[i].plot(global_valid_MAE[key], label= 'Validation MAE',linestyle='-', marker='o' )
-        ax[i].set_ylabel('MAE')
-        ax[i].legend()
+        fig , ax = plt.subplots(len(Keys), sharex= True)
+        fig.suptitle('MAE Metric Per Training Steps')
+        ax[len(Keys)-1].set_xlabel('Steps')
+        for i,key in enumerate(Keys):
+            ax[i].plot(global_test_MAE[key], label='Test MAE', linestyle='-', marker='o')
+            ax[i].plot(global_valid_MAE[key], label= 'Validation MAE',linestyle='-', marker='o' )
+            ax[i].set_ylabel('MAE')
+            ax[i].legend()
         
-    plt.show()
-
-    plot_cluster(clusters,prototypes,lag)
-    plot_cluster(clusters,prototypes,lag, mode= 'test')
+        plt.show()
 
     if ARI:
         return cluster_label

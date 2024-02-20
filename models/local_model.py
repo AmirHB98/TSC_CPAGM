@@ -25,11 +25,12 @@ def local_model(series_set: list, split_point : int, lag: int,sample_plot : bool
     valid_MAE =[]
     test_MAE = []
     to_plot = [random.randint(0,len(series_set)-1) for _ in range(num_plots)]
-    fig, ax = plt.subplots(num_plots,2, sharey= 'row')
-    fig.suptitle('Sampled Prediction Using Local Model (LM)')
-    ax[0,0].set_title('Validation Samples')
-    ax[0,1].set_title('Test Samples')
-    a = 0
+    if sample_plot:
+        fig, ax = plt.subplots(num_plots,2, sharey= 'row')
+        fig.suptitle(f'Sampled Prediction Using Local Model (LM) for {lag} lags')
+        ax[0,0].set_title('Validation Samples')
+        ax[0,1].set_title('Test Samples')
+        a = 0
 
     for i,series in enumerate(series_set):
 
